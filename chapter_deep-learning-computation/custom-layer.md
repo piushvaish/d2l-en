@@ -1,14 +1,34 @@
 # Custom Layers
 
-One of the reasons for the success of deep learning can be found in the wide range of layers that can be used in a deep network. This allows for a tremendous degree of customization and adaptation. For instance, scientists have invented layers for images, text, pooling, loops, dynamic programming, even for computer programs. Sooner or later you will encounter a layer that doesn't exist yet in Gluon, or even better, you will eventually invent a new layer that works well for your problem at hand. This is when it's time to build a custom layer. This section shows you how.
+One of factors behind deep learnings success
+is the availability of a wide range of layers
+that can be composed in creative ways
+to design architectures suitable
+for a wide variety of tasks.
+For instance, researchers have invented layers
+specifically for handling images, text,
+looping over sequential data,
+performing dynamic programming, etc.
+Sooner or later you will encounter (or invent)
+a layer that does not exist yet in Gluon,
+In these cases, you must build a custom layer.
+In this section, we show you how.
 
 ## Layers without Parameters
 
-Since this is slightly intricate, we start with a custom layer (aka Block) that doesn't have any inherent parameters. Our first step is very similar to when we [introduced blocks](model-construction.md) previously. The following `CenteredLayer` class constructs a layer that subtracts the mean from the input. We build it by inheriting from the Block class and implementing the `forward` method.
+To start, we construct a custom layer (a Block) 
+that does not have any parameters of its own. 
+This should look familiar if you recall our 
+introduction to Gluon's `Block` in :numref:`sec_model_construction`. 
+The following `CenteredLayer` class simply
+subtracts the mean from its input. 
+To build it, we simply need to inherit 
+from the Block class and implement the `forward` method.
 
 ```{.python .input  n=1}
-from mxnet import gluon, nd
+from mxnet import gluon, np, npx
 from mxnet.gluon import nn
+npx.set_np()
 
 class CenteredLayer(nn.Block):
     def __init__(self, **kwargs):
@@ -18,14 +38,15 @@ class CenteredLayer(nn.Block):
         return x - x.mean()
 ```
 
-To see how it works let's feed some data into the layer.
+Let us verify that our layer works as intended by feeding some data through it.
 
 ```{.python .input  n=2}
 layer = CenteredLayer()
-layer(nd.array([1, 2, 3, 4, 5]))
+layer(np.array([1, 2, 3, 4, 5]))
 ```
 
-We can also use it to construct more complex models.
+We can now incorporate our layer as a component
+in constructing more complex models.
 
 ```{.python .input  n=3}
 net = nn.Sequential()
@@ -33,18 +54,37 @@ net.add(nn.Dense(128), CenteredLayer())
 net.initialize()
 ```
 
-Let's see whether the centering layer did its job. For that we send random data through the network and check whether the mean vanishes. Note that since we're dealing with floating point numbers, we're going to see a very small albeit typically nonzero number.
+As an extra sanity check, we can send random data 
+through the network and check that the mean is in fact 0.
+Because we are dealing with floating point numbers, 
+we may still see a *very* small nonzero number
+due to quantization.
 
 ```{.python .input  n=4}
-y = net(nd.random.uniform(shape=(4, 8)))
-y.mean().asscalar()
+y = net(np.random.uniform(size=(4, 8)))
+y.mean()
 ```
 
 ## Layers with Parameters
 
-Now that we know how to define layers in principle, let's define layers with parameters. These can be adjusted through training. In order to simplify things for an avid deep learning researcher the `Parameter` class and the `ParameterDict` dictionary provide some basic housekeeping functionality. In particular, they govern access, initialization, sharing, saving and loading model parameters. For instance, this way we don't need to write custom serialization routines for each new custom layer.
+Now that we know how to define simple layers
+let us move on to defining layers with parameters
+that can be adjusted through training. 
+To automate some of the routine work
+the `Parameter` class and the `ParameterDict` dictionary 
+provide some basic housekeeping functionality.
+In particular, they govern access, initialization, 
+sharing, saving and loading model parameters. 
+This way, among other benefits, we will not need to write
+custom serialization routines for every custom layer.
 
-For instance, we can use the member variable `params` of the `ParameterDict` type that comes with the Block class. It is a dictionary that maps string type parameter names to model parameters in the `Parameter` type.  We can create a `Parameter` instance from `ParameterDict` via the `get` function.
+The `Block` class contains a `params` variable
+of the `ParameterDict` type. 
+This dictionary maps strings representing parameter names
+to model parameters (of the `Parameter` type). 
+The `ParameterDict` also supplied a `get` function
+that makes it easy to generate a new parameter
+with a specified name and shape.
 
 ```{.python .input  n=7}
 params = gluon.ParameterDict()
@@ -52,22 +92,36 @@ params.get('param2', shape=(2, 3))
 params
 ```
 
-Let's use this to implement our own version of the dense layer. It has two parameters - bias and weight. To make it a bit nonstandard, we bake in the ReLu activation as default. Next, we implement a fully connected layer with both weight and bias parameters.  It uses ReLU as an activation function, where `in_units` and `units` are the number of inputs and the number of outputs, respectively.
+We now have all the basic ingredients that we need
+to implement our own version of Gluon's `Dense` layer. 
+Recall that this layer requires two parameters,
+one to represent the weight and another for the bias. 
+In this implementation, we bake in the ReLU activation as a default.
+In the `__init__` function, `in_units` and `units`
+denote the number of inputs and outputs, respectively.
 
 ```{.python .input  n=19}
 class MyDense(nn.Block):
-    # Units: the number of outputs in this layer; in_units: the number of inputs in this layer.
+    # units: the number of outputs in this layer; in_units: the number of
+    # inputs in this layer
     def __init__(self, units, in_units, **kwargs):
         super(MyDense, self).__init__(**kwargs)
         self.weight = self.params.get('weight', shape=(in_units, units))
         self.bias = self.params.get('bias', shape=(units,))
 
     def forward(self, x):
-        linear = nd.dot(x, self.weight.data()) + self.bias.data()
-        return nd.relu(linear)
+        linear = np.dot(x, self.weight.data()) + self.bias.data()
+        return npx.relu(linear)
 ```
 
-Naming the parameters allows us to access them by name through dictionary lookup later. It's a good idea to give them instructive names. Next, we instantiate the `MyDense` class and access its model parameters.
+Naming our parameters allows us to access them 
+by name through dictionary lookup later.
+Generally, you will want to give your variables
+simple names that make their purpose clear.
+Next, we instantiate the `MyDense` class 
+and access its model parameters.
+Note that the Block's name is automatically
+prepended to each Parameter's name.
 
 ```{.python .input}
 dense = MyDense(units=3, in_units=5)
@@ -78,31 +132,39 @@ We can directly carry out forward calculations using custom layers.
 
 ```{.python .input  n=20}
 dense.initialize()
-dense(nd.random.uniform(shape=(2, 5)))
+dense(np.random.uniform(size=(2, 5)))
 ```
 
-We can also construct models using custom layers. Once we have that we can use it just like the built-in dense layer. The only exception is that in our case size inference is not automagic. Please consult the [MXNet documentation](http://www.mxnet.io) for details on how to do this.
+We can also construct models using custom layers.
+Once we have that we can use it just like the built-in dense layer.
+The only exception is that in our case,
+shape inference is not automatic. 
+If you are interested in these bells and whisteles,
+please consult the [MXNet documentation](http://www.mxnet.io)
+for details on how to implement shape inference in custom layers.
 
 ```{.python .input  n=19}
 net = nn.Sequential()
 net.add(MyDense(8, in_units=64),
         MyDense(1, in_units=8))
 net.initialize()
-net(nd.random.uniform(shape=(2, 64)))
+net(np.random.uniform(size=(2, 64)))
 ```
 
 ## Summary
 
-* We can design custom layers via the Block class. This is more powerful than defining a block factory, since it can be invoked in many contexts.
-* Blocks can have local parameters.
+* We can design custom layers via the Block class. This allows us to define flexible new layers that behave differently from any existing layers in the library.
+* Once defined, custom layers can be invoked in arbitrary contexts and architectures.
+* Blocks can have local parameters, which are stored as a `ParameterDict` object in each Blovk's `params` attribute.
 
 
-## Problems
+## Exercises
 
-1. Design a layer that learns an affine transform of the data, i.e. it removes the mean and learns an additive parameter instead.
-1. Design a layer that takes an input and computes a tensor reduction, i.e. it returns $y_k = \sum_{i,j} W_{ijk} x_i x_j$.
-1. Design a layer that returns the leading half of the Fourier coefficients of the data. Hint - look up the `fft` function in MXNet.
+1. Design a layer that learns an affine transform of the data.
+1. Design a layer that takes an input and computes a tensor reduction, 
+   i.e., it returns $y_k = \sum_{i, j} W_{ijk} x_i x_j$.
+1. Design a layer that returns the leading half of the Fourier coefficients of the data. Hint: look up the `fft` function in MXNet.
 
-## Discuss on our Forum
+## [Discussions](https://discuss.mxnet.io/t/2328)
 
-<div id="discuss" topic_id="2328"></div>
+![](../img/qr_custom-layer.svg)

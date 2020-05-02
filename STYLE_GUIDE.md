@@ -13,10 +13,12 @@
         * Exercises
         * Scan the QR Code to Access Discussions
         * References (if any)
+* Environments
+    * Use double quotes
 * Quotes
     * Use double quotes
 * Symbol Descriptions
-    * time step t（not t time step）
+    * timestep t（not t timestep）
 * Tools, Class, and Functions
     * Gluon, MXNet, NumPy, spaCy, NDArray, Symbol, Block, HybridBlock, ResNet-18, Fashion-MNIST, matplotlib
         * Consider these as words without accents (``)
@@ -31,12 +33,18 @@
         * instance (not object)
         * weight, bias, label
         * model training, model prediction (model inference)
-        * training/testing/validation data set
+        * training/testing/validation dataset
+        * data point/data instance/training example/testing example/example of the dataset
     * Distinguish：
         * hyperparameter vs parameter
-        * mini-batch stochastic gradient descent vs stochastic gradient descent
+        * minibatch stochastic gradient descent vs stochastic gradient descent
     * List
         * https://github.com/mli/gluon-tutorials-zh/blob/master/TERMINOLOGY.md
+* Writing numbers: text or numerals?
+    * Use numerals when they are explaining or part of code or math. Otherwise refer to [OWL](https://owl.purdue.edu/owl/general_writing/grammar/writing_numbers.html)
+* Acceptable abbreviations
+    * MLP, CNN, RNN, GRU, LSTM, model names (e.g., ELMo, GPT, BERT)
+    * We spell out full names in most cases to be clear (e.g., NLP -> natural language processing)
 
 ## Math
 
@@ -47,15 +55,19 @@
     * the N equations above/below
 * Place punctuations within equations if necessary
     * e.g., comma and period
-* Assignment sumbol
+* Assignment symbol
     * \leftarrow
+* Distiguish text numerals and mathematical numerals:
+    * According to [Donald E. Knuth](http://tug.org/TUGboat/tb10-1/tb23knut.pdf):
+      * Text numerals are numbers that are essentially part of the English language: "1776", "Chapter 5", "2 ways"
+      * Mathematical numerals are numbers that are part of the mathematics: "$x$ is either $1$ or $-1$", "the greatest common divisor of $12$ and $18$ is $6$".
 
 ## Figure
 
 * Software
     * Use OmniGraffle to make figures.
       * Export pdf (infinite canvas) in 100%, then use pdf2svg to convert to svg
-        * `ls | while read f; do pdf2svg $f ${f%.pdf}.svg; done`
+        * `ls *.pdf | while read f; do pdf2svg $f ${f%.pdf}.svg; done`
       * Do not export svg directly from Omnigraffle (font size may slightly change)
 * Style
     * Size：
@@ -66,11 +78,14 @@
         * 1pt
         * arrow head size: 50%
     * Font：
-        * Arial, 9pt（subscripts：7pt）
+        * Arial (for text), STIXGeneral (for math), 9pt（subscripts/superscripts：6pt）
+        * Do not italicize numbers or parentheses in subscripts or superscripts
     * Color：
         * Blue as background (text is black)
+            * (Try to avoid) Extra Dark：3FA3FD
             * Dark：66BFFF
             * Light：B2D9FF
+            * (Try to avoid) Extra Light: CFF4FF
 * Be careful about copyright
 * Reference
     * e.g., Figure 7.1 (manually)
@@ -78,7 +93,7 @@
 
 ## Code
 
-* Each line must have <=80 characters (limited by page width)
+* Each line must have <=78 characters (limited by page width)
 * Use utils.py to encapsulate classes/functions that are repetitively used
     * Give full implementation when it is used for the first time
 * Python
@@ -111,6 +126,7 @@
         * DataLoader instance：`train_iter`, `test_iter`, `data_iter`
 * Comments
     * Add period at the end of comments.
+    * For clarity, surround variable names with accents, e.g.,  # shape of `X`
 * imports
     * import alphabetically
     * `from mxnet.gluon import data as gdata, loss as gloss, nn, utils as gutils`
@@ -129,12 +145,10 @@
     * 1. → `1.0`
     * remove namescope
 
-## Hyperlinks
 
-* Internal hyperlinks
-    * In the [“Linear Regression”](linear-reg.md) section
-* External hyperlinks
-    * [Layer](http:bla)
+## References
+
+* Refer to [d2lbook](http://book.d2l.ai/examples/markdown.html#cross-references)how to add references for figure, table and equations.
 
 
 ## QR Code
@@ -142,9 +156,39 @@
 * https://www.the-qrcode-generator.com/
     * 75pixel, SVG
 
+## Citations
 
-## References
+1. Run `pip install git+https://github.com/d2l-ai/d2l-book`
+1. Use bibtool to generate consistent keys for bibtex entries. Install it by `brew install bib-tool`
+1. Add an bibtex entry to `d2l.bib` on the root directory. Say the original entry is
+```
+@article{wood2011sequence,
+  title={The sequence memoizer},
+  author={Wood, Frank and Gasthaus, Jan and Archambeau, C{\'e}dric and James, Lancelot and Teh, Yee Whye},
+  journal={Communications of the ACM},
+  volume={54},
+  number={2},
+  pages={91--98},
+  year={2011},
+  publisher={ACM}
+}
+```
+4. Run `bibtool -s -f "%3n(author).%d(year)" d2l.bib -o d2l.bib`. Now the added entry will have consistent keys. And as a side-effect, it'll appear in alphabetically sorted order relative to all other papers in the file:
+```
+@Article{	  Wood.Gasthaus.Archambeau.ea.2011,
+  title		= {The sequence memoizer},
+  author	= {Wood, Frank and Gasthaus, Jan and Archambeau, C{\'e}dric
+		  and James, Lancelot and Teh, Yee Whye},
+  journal	= {Communications of the ACM},
+  volume	= {54},
+  number	= {2},
+  pages		= {91--98},
+  year		= {2011},
+  publisher	= {ACM}
+}
+```
+5. In the text, use the following to cite the added paper:
+```
+:cite:`Wood.Gasthaus.Archambeau.ea.2011`
+```
 
-* Append references at the end of each section
-    * Google Scholar: APA format
-    * All references are to be consolidated by the Press
